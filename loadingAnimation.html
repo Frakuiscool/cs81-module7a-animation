@@ -4,37 +4,99 @@
   <meta charset="UTF-8">
   <title>Loading Animation Simulator</title>
 </head>
-<body style="font-family: monospace; text-align: center; padding-top: 100px; background-color: #f4f4f4;">
-
+<body style="font-family: monospace; text-align: center; padding-top: 100px; background-color: #f4f4f4; transition: background-color 0.5s ease;">
+ 
   <div id="loader" style="font-size: 2rem; margin-bottom: 20px;">Loading...</div>
   <div id="status">Please wait</div>
-
+ 
+  <!-- NEW FEATURE: a visual progress bar that fills up as the loading cycles progress -->
+  <div style="width: 200px; height: 12px; background: #ddd; border-radius: 6px; margin: 20px auto; overflow: hidden;">
+    <div id="progressBar" style="width: 0%; height: 100%; background: #4caf50; transition: width 0.3s ease;"></div>
+  </div>
+  <div id="progressText" style="font-size: 0.9rem; color: #555;">0%</div>
+ 
   <script>
     function runLoadingAnimation() {
+      // Grab references to the DOM elements we'll be updating.
+      // Doing this once (instead of re-querying inside the loop) is more efficient.
       const loader = document.getElementById("loader");
       const status = document.getElementById("status");
-
+      const progressBar = document.getElementById("progressBar");
+      const progressText = document.getElementById("progressText");
+ 
+      // `frames` holds the sequence of visuals shown while "loading".
+      // The animation cycles through this array repeatedly to create motion.
       const frames = ["⏳", "⌛", ".", "..", "..."];
+ 
+      // `index` tracks which frame we're currently displaying (increments every tick).
       let index = 0;
+ 
+      // `cycleCount` tracks how many FULL passes through the `frames` array we've completed.
+      // One "cycle" = 5 individual frame updates (since frames.length === 5).
       let cycleCount = 0;
+ 
+      // `maxCycles` is how many full cycles to run before stopping the animation.
+      // NOTE: total runtime = maxCycles * frames.length * interval delay
+      // (10 cycles * 5 frames * 500ms = 25 seconds).
       const maxCycles = 10;
-
+ 
+      // setInterval repeatedly runs the given callback function every `500` milliseconds,
+      // creating the "looping" animation effect. It returns an ID we can use later
+      // to stop the loop (stored in `interval`).
       const interval = setInterval(() => {
+        // Update the DOM: swap the loader's text to the current frame.
+        // `index % frames.length` wraps the index back to 0 once it exceeds
+        // the array length, so the animation loops seamlessly (⏳ → ⌛ → . → .. → ... → ⏳ ...).
         loader.textContent = frames[index % frames.length];
+ 
+        // Move to the next frame on the following tick.
         index++;
+ 
+        // Every time `index` becomes an exact multiple of frames.length,
+        // it means we've just completed one full pass through all frames —
+        // so we count that as one finished "cycle".
         if (index % frames.length === 0) {
           cycleCount++;
+ 
+          // CREATIVE IDEA (not implemented, just a comment for future inspiration):
+          // Instead of only updating text, each completed cycle could also play
+          // a soft "tick" sound effect, cycle the background color through a
+          // gradient, or swap in a rotating set of extra emojis (e.g. 🚀 🌟 🔥)
+          // to make the wait feel more lively and less like a static timer.
+ 
+          // Update the new progress bar/text feature based on how many
+          // cycles have completed relative to `maxCycles`.
+          const percent = Math.min(100, Math.round((cycleCount / maxCycles) * 100));
+          progressBar.style.width = percent + "%";
+          progressText.textContent = percent + "%";
         }
+ 
+        // Once we've completed the target number of cycles, it's time to stop.
         if (cycleCount >= maxCycles) {
+          // clearInterval stops setInterval from firing any further ticks.
+          // We pass in the `interval` ID returned earlier so JS knows exactly
+          // which timer to cancel. Without this, the loop would run forever,
+          // continuing to consume memory/CPU even after "loading" is done.
           clearInterval(interval);
+ 
+          // Final DOM update: replace the loader with a checkmark and
+          // update the status text to let the user know we're finished.
           loader.textContent = "✅";
           status.textContent = "Done!";
+ 
+          // Make sure the progress bar visually reaches 100% at completion,
+          // and give the page a subtle "success" background tint.
+          progressBar.style.width = "100%";
+          progressText.textContent = "100%";
+          document.body.style.backgroundColor = "#e8f5e9";
         }
-      }, 500);
+      }, 500); // 500ms delay between each tick — controls animation speed.
     }
-
+ 
+    // Kick off the animation as soon as the script runs.
     runLoadingAnimation();
   </script>
-
+ 
 </body>
 </html>
+ 
